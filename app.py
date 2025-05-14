@@ -10,8 +10,11 @@ uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 if not uploaded_file:
     st.stop()
 
-# Load uploaded data only (no embedded file)
+# Load uploaded file
 df = pd.read_excel(uploaded_file)
+
+# Diagnostic output to verify what file was uploaded
+st.write("First 5 submission dates:", df["Submission Date"].head())
 
 # Extract ONT type
 def extract_ont_type(text):
