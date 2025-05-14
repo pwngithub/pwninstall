@@ -59,10 +59,21 @@ if uploaded_file:
     install_df = df[df["ONT Type"].notna()]
     installs_per_day = install_df.groupby(df["Submission Date"].dt.date).size()
     if not installs_per_day.empty:
-        fig, ax = plt.subplots()
-        installs_per_day.plot(kind="bar", ax=ax)
-        ax.set_title("ONT Installs Per Day")
-        ax.set_xlabel("Date")
-        ax.set_ylabel("Number of Installs")
-        ax.tick_params(axis='x', rotation=45)
-        st.pyplot(fig)
+        fig_day, ax_day = plt.subplots()
+        installs_per_day.plot(kind="bar", ax=ax_day)
+        ax_day.set_title("ONT Installs Per Day")
+        ax_day.set_xlabel("Date")
+        ax_day.set_ylabel("Number of Installs")
+        ax_day.tick_params(axis='x', rotation=45)
+        st.pyplot(fig_day)
+
+    st.subheader("ONT Installs Per Month")
+    installs_per_month = install_df.groupby(df["Submission Date"].dt.to_period("M")).size()
+    if not installs_per_month.empty:
+        fig_month, ax_month = plt.subplots()
+        installs_per_month.plot(kind="bar", ax=ax_month)
+        ax_month.set_title("ONT Installs Per Month")
+        ax_month.set_xlabel("Month")
+        ax_month.set_ylabel("Number of Installs")
+        ax_month.tick_params(axis='x', rotation=45)
+        st.pyplot(fig_month)
