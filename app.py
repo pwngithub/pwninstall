@@ -21,15 +21,20 @@ if uploaded_file:
 
     # Convert Submission Date to datetime
     df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
+    df = df[df["Submission Date"].notna()]
+
+    # Generate Month column after validating Submission Date
     df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
 
-    # Recalculate month filter options based on uploaded file content
-    available_months = sorted(df["Month"].dropna().unique())
-    available_techs = sorted(df["Tech"].dropna().unique())
+    # Filter options
+    techs = sorted(df["Tech"].dropna().unique())
+    months = sorted(df["Month"].unique())
 
-    selected_tech = st.multiselect("Filter by Tech", available_techs)
-    selected_month = st.multiselect("Filter by Month", available_months)
+    # Filters
+    selected_tech = st.multiselect("Filter by Tech", techs)
+    selected_month = st.multiselect("Filter by Month", months)
 
+    # Apply filters
     filtered_df = df.copy()
     if selected_tech:
         filtered_df = filtered_df[filtered_df["Tech"].isin(selected_tech)]
