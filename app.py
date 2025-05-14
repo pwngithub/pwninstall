@@ -7,74 +7,75 @@ import matplotlib.pyplot as plt
 st.title("Inventory Transfer Dashboard")
 
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
-if uploaded_file:
-    df = pd.read_excel(uploaded_file)
+if not uploaded_file:
+    st.stop()
 
-    # Extract ONT type
-    def extract_ont_type(text):
-        if isinstance(text, str):
-            matches = re.findall(r'ONT\s+([0-9A-Za-z\s\(\)-]+)', text)
-            return ', '.join(match.strip() for match in matches)
-        return None
+# Load uploaded data only (no embedded file)
+df = pd.read_excel(uploaded_file)
 
-    df["ONT Type"] = df["Inventory to Transfer."].apply(extract_ont_type)
+# Extract ONT type
+def extract_ont_type(text):
+    if isinstance(text, str):
+        matches = re.findall(r'ONT\s+([0-9A-Za-z\s\(\)-]+)', text)
+        return ', '.join(match.strip() for match in matches)
+    return None
 
-    # Convert and validate date
-    df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
-    df = df[df["Submission Date"].notna()].copy()
+df["ONT Type"] = df["Inventory to Transfer."].apply(extract_ont_type)
 
-    # Derive month column early
-    df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
+# Convert and validate date
+df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
+df = df[df["Submission Date"].notna()].copy()
+df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
 
-    # Streamlit filters
-    available_techs = sorted(df["Tech"].dropna().unique())
-    available_months = sorted(df["Month"].unique())
+# Streamlit filters
+available_techs = sorted(df["Tech"].dropna().unique())
+available_months = sorted(df["Month"].unique())
 
-    selected_techs = st.multiselect("Filter by Tech", available_techs)
-    selected_months = st.multiselect("Filter by Month", available_months)
+selected_techs = st.multiselect("Filter by Tech", available_techs)
+selected_months = st.multiselect("Filter by Month", available_months)
 
-    # Apply filters
-    filtered_df = df.copy()
-    if selected_techs:
-        filtered_df = filtered_df[filtered_df["Tech"].isin(selected_techs)]
-    if selected_months:
-        filtered_df = filtered_df[filtered_df["Month"].isin(selected_months)]
+# Apply filters
+filtered_df = df.copy()
+if selected_techs:
+    filtered_df = filtered_df[filtered_df["Tech"].isin(selected_techs)]
+if selected_months:
+    filtered_df = filtered_df[filtered_df["Month"].isin(selected_months)]
 
-    # Debug info
-    st.caption(f"Total records in file: {len(df)}")
-    st.caption(f"Available months: {available_months}")
-    st.caption(f"Filtered records: {len(filtered_df)}")
+# Debug info
+st.caption(f"Total records in file: {len(df)}")
+st.caption(f"Available months: {available_months}")
+st.caption(f"Filtered records: {len(filtered_df)}")
 
-    st.subheader("Filtered Results")
-    if not filtered_df.empty:
-        st.dataframe(filtered_df[["Submission Date", "Month", "Tech", "Transfer Inventory from:", "Type of transfer", "Inventory to Transfer.", "ONT Type"]])
-    else:
-        st.warning("No records match the selected filters.")
+st.subheader("Filtered Results")
+if not filtered_df.empty:
+    st.dataframe(filtered_df[["Submission Date", "Month", "Tech", "Transfer Inventory from:", "Type of transfer", "Inventory to Transfer.", "ONT Type"]])
+else:
+    st.warning("No records match the selected filters.")
 
-    st.subheader("ONT Type Usage by Tech")
-    if not filtered_df.empty:
-        summary = filtered_df.groupby(["Tech", "ONT Type"]).size().unstack(fill_value=0)
-        st.bar_chart(summary)
+st.subheader("ONT Type Usage by Tech")
+if not filtered_df.empty:
+    summary = filtered_df.groupby(["Tech", "ONT Type"]).size().unstack(fill_value=0)
+    st.bar_chart(summary)
 
-    st.subheader("Installs Per Day")
-    install_df = filtered_df[filtered_df["ONT Type"].notna()]
-    installs_per_day = install_df.groupby(install_df["Submission Date"].dt.date).size()
-    if not installs_per_day.empty:
-        fig_day, ax_day = plt.subplots()
-        installs_per_day.plot(kind="bar", ax=ax_day)
-        ax_day.set_title("Installs Per Day")
-        ax_day.set_xlabel("Date")
-        ax_day.set_ylabel("Number of Installs")
-        ax_day.tick_params(axis='x', rotation=45)
-        st.pyplot(fig_day)
+st.subheader("Installs Per Day")
+install_df = filtered_df[filtered_df["ONT Type"].notna()]
+installs_per_day = install_df.groupby(install_df["Submission Date"].dt.date).size()
+if not installs_per_day.empty:
+    fig_day, ax_day = plt.subplots()
+    installs_per_day.plot(kind="bar", ax=ax_day)
+    ax_day.set_title("Installs Per Day")
+    ax_day.set_xlabel("Date")
+    ax_day.set_ylabel("Number of Installs")
+    ax_day.tick_params(axis='x', rotation=45)
+    st.pyplot(fig_day)
 
-    st.subheader("Installs Per Month")
-    installs_per_month = install_df.groupby(install_df["Submission Date"].dt.to_period("M")).size()
-    if not installs_per_month.empty:
-        fig_month, ax_month = plt.subplots()
-        installs_per_month.plot(kind="bar", ax=ax_month)
-        ax_month.set_title("Installs Per Month")
-        ax_month.set_xlabel("Month")
-        ax_month.set_ylabel("Number of Installs")
-        ax_month.tick_params(axis='x', rotation=45)
-        st.pyplot(fig_month)
+st.subheader("Installs Per Month")
+installs_per_month = install_df.groupby(install_df["Submission Date"].dt.to_period("M")).size()
+if not installs_per_month.empty:
+    fig_month, ax_month = plt.subplots()
+    installs_per_month.plot(kind="bar", ax=ax_month)
+    ax_month.set_title("Installs Per Month")
+    ax_month.set_xlabel("Month")
+    ax_month.set_ylabel("Number of Installs")
+    ax_month.tick_params(axis='x', rotation=45)
+    st.pyplot(fig_month)
