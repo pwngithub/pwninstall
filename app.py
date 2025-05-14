@@ -10,15 +10,13 @@ uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 if not uploaded_file:
     st.stop()
 
-# Load uploaded file
+# Load and parse file
 df = pd.read_excel(uploaded_file)
-
-# Convert and validate Submission Date FIRST
 df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
 df = df[df["Submission Date"].notna()].copy()
 df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
 
-# Diagnostic output AFTER conversion
+# Diagnostic preview
 st.write("First 5 parsed submission dates:", df["Submission Date"].head())
 st.write("Last 5 parsed submission dates:", df["Submission Date"].tail())
 
@@ -31,24 +29,16 @@ def extract_ont_type(text):
 
 df["ONT Type"] = df["Inventory to Transfer."].apply(extract_ont_type)
 
-# Extract filters from parsed data
-available_months = sorted(df["Month"].unique())
+# Filter by Tech only
 available_techs = sorted(df["Tech"].dropna().unique())
-
-# Filters
 selected_techs = st.multiselect("Filter by Tech", available_techs)
-selected_months = st.multiselect("Filter by Month", available_months)
 
-# Apply filters
 filtered_df = df.copy()
 if selected_techs:
     filtered_df = filtered_df[filtered_df["Tech"].isin(selected_techs)]
-if selected_months:
-    filtered_df = filtered_df[filtered_df["Month"].isin(selected_months)]
 
 # Debug info
 st.caption(f"Total records in file: {len(df)}")
-st.caption(f"Available months: {available_months}")
 st.caption(f"Filtered records: {len(filtered_df)}")
 
 st.subheader("Filtered Results")
