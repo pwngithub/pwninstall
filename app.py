@@ -15,6 +15,7 @@ df = pd.read_excel(uploaded_file)
 
 # Diagnostic output to verify what file was uploaded
 st.write("First 5 submission dates:", df["Submission Date"].head())
+st.write("Last 5 submission dates:", df["Submission Date"].tail())
 
 # Extract ONT type
 def extract_ont_type(text):
