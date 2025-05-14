@@ -13,7 +13,7 @@ if not uploaded_file:
 # Load uploaded file
 df = pd.read_excel(uploaded_file)
 
-# Diagnostic output to verify what file was uploaded
+# Diagnostic output
 st.write("First 5 submission dates:", df["Submission Date"].head())
 st.write("Last 5 submission dates:", df["Submission Date"].tail())
 
@@ -26,15 +26,16 @@ def extract_ont_type(text):
 
 df["ONT Type"] = df["Inventory to Transfer."].apply(extract_ont_type)
 
-# Convert and validate date
+# Ensure Submission Date is datetime and derive Month
 df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
 df = df[df["Submission Date"].notna()].copy()
 df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
 
-# Streamlit filters
+# Force re-evaluation of available months
+available_months = sorted(list(set(df["Month"].dropna())))
 available_techs = sorted(df["Tech"].dropna().unique())
-available_months = sorted(df["Month"].unique())
 
+# Streamlit filters
 selected_techs = st.multiselect("Filter by Tech", available_techs)
 selected_months = st.multiselect("Filter by Month", available_months)
 
