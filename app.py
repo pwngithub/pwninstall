@@ -23,29 +23,11 @@ if uploaded_file:
     df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
 
     techs = df["Tech"].dropna().unique()
-    vehicles = df["Transfer Inventory from:"].dropna().unique()
-    job_types = df["Type of transfer"].dropna().unique()
-    ont_types = df["ONT Type"].dropna().unique()
-    submission_dates = df["Submission Date"].dropna().dt.date.unique()
-
     selected_tech = st.multiselect("Filter by Tech", sorted(techs))
-    selected_vehicle = st.multiselect("Filter by Vehicle", sorted(vehicles))
-    selected_job_type = st.multiselect("Filter by Job Type", sorted(job_types))
-    selected_date = st.multiselect("Filter by Submission Date", sorted(submission_dates))
-    selected_ont = st.multiselect("Filter by ONT Type", sorted(ont_types))
 
     filtered_df = df.copy()
-
     if selected_tech:
         filtered_df = filtered_df[filtered_df["Tech"].isin(selected_tech)]
-    if selected_vehicle:
-        filtered_df = filtered_df[filtered_df["Transfer Inventory from:"].isin(selected_vehicle)]
-    if selected_job_type:
-        filtered_df = filtered_df[filtered_df["Type of transfer"].isin(selected_job_type)]
-    if selected_date:
-        filtered_df = filtered_df[filtered_df["Submission Date"].dt.date.isin(selected_date)]
-    if selected_ont:
-        filtered_df = filtered_df[filtered_df["ONT Type"].isin(selected_ont)]
 
     st.subheader("Filtered Results")
     st.dataframe(filtered_df[["Submission Date", "Tech", "Transfer Inventory from:", "Type of transfer", "Inventory to Transfer.", "ONT Type"]])
