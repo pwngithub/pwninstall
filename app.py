@@ -21,13 +21,13 @@ if uploaded_file:
 
     # Convert Submission Date to datetime
     df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
-
     df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
+
     techs = df["Tech"].dropna().unique()
-    months = df["Month"].dropna().unique()
+    months = sorted(df["Month"].dropna().unique())
 
     selected_tech = st.multiselect("Filter by Tech", sorted(techs))
-    selected_month = st.multiselect("Filter by Month", sorted(months))
+    selected_month = st.multiselect("Filter by Month", months)
 
     filtered_df = df.copy()
     if selected_tech:
