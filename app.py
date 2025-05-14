@@ -23,11 +23,12 @@ if uploaded_file:
     df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
     df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
 
-    techs = df["Tech"].dropna().unique()
-    months = sorted(df["Month"].dropna().unique())
+    # Recalculate month filter options based on uploaded file content
+    available_months = sorted(df["Month"].dropna().unique())
+    available_techs = sorted(df["Tech"].dropna().unique())
 
-    selected_tech = st.multiselect("Filter by Tech", sorted(techs))
-    selected_month = st.multiselect("Filter by Month", months)
+    selected_tech = st.multiselect("Filter by Tech", available_techs)
+    selected_month = st.multiselect("Filter by Month", available_months)
 
     filtered_df = df.copy()
     if selected_tech:
