@@ -22,12 +22,18 @@ if uploaded_file:
     # Convert Submission Date to datetime
     df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
 
+    df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
     techs = df["Tech"].dropna().unique()
+    months = df["Month"].dropna().unique()
+
     selected_tech = st.multiselect("Filter by Tech", sorted(techs))
+    selected_month = st.multiselect("Filter by Month", sorted(months))
 
     filtered_df = df.copy()
     if selected_tech:
         filtered_df = filtered_df[filtered_df["Tech"].isin(selected_tech)]
+    if selected_month:
+        filtered_df = filtered_df[filtered_df["Month"].isin(selected_month)]
 
     st.subheader("Filtered Results")
     st.dataframe(filtered_df[["Submission Date", "Tech", "Transfer Inventory from:", "Type of transfer", "Inventory to Transfer.", "ONT Type"]])
@@ -37,24 +43,24 @@ if uploaded_file:
         summary = filtered_df.groupby(["Tech", "ONT Type"]).size().unstack(fill_value=0)
         st.bar_chart(summary)
 
-    st.subheader("ONT Installs Per Day")
-    install_df = df[df["ONT Type"].notna()]
-    installs_per_day = install_df.groupby(df["Submission Date"].dt.date).size()
+    st.subheader("Installs Per Day")
+    install_df = filtered_df[filtered_df["ONT Type"].notna()]
+    installs_per_day = install_df.groupby(install_df["Submission Date"].dt.date).size()
     if not installs_per_day.empty:
         fig_day, ax_day = plt.subplots()
         installs_per_day.plot(kind="bar", ax=ax_day)
-        ax_day.set_title("ONT Installs Per Day")
+        ax_day.set_title("Installs Per Day")
         ax_day.set_xlabel("Date")
         ax_day.set_ylabel("Number of Installs")
         ax_day.tick_params(axis='x', rotation=45)
         st.pyplot(fig_day)
 
-    st.subheader("ONT Installs Per Month")
-    installs_per_month = install_df.groupby(df["Submission Date"].dt.to_period("M")).size()
+    st.subheader("Installs Per Month")
+    installs_per_month = install_df.groupby(install_df["Submission Date"].dt.to_period("M")).size()
     if not installs_per_month.empty:
         fig_month, ax_month = plt.subplots()
         installs_per_month.plot(kind="bar", ax=ax_month)
-        ax_month.set_title("ONT Installs Per Month")
+        ax_month.set_title("Installs Per Month")
         ax_month.set_xlabel("Month")
         ax_month.set_ylabel("Number of Installs")
         ax_month.tick_params(axis='x', rotation=45)
