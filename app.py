@@ -19,14 +19,16 @@ if uploaded_file:
 
     df["ONT Type"] = df["Inventory to Transfer."].apply(extract_ont_type)
 
-    # Ensure Submission Date is treated as datetime
+    # Convert and validate date
     df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
     df = df[df["Submission Date"].notna()].copy()
+
+    # Derive month column early
     df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
 
-    # Available filter options
-    available_months = sorted(df["Month"].unique())
+    # Streamlit filters
     available_techs = sorted(df["Tech"].dropna().unique())
+    available_months = sorted(df["Month"].unique())
 
     selected_techs = st.multiselect("Filter by Tech", available_techs)
     selected_months = st.multiselect("Filter by Month", available_months)
@@ -38,11 +40,16 @@ if uploaded_file:
     if selected_months:
         filtered_df = filtered_df[filtered_df["Month"].isin(selected_months)]
 
+    # Debug info
+    st.caption(f"Total records in file: {len(df)}")
+    st.caption(f"Available months: {available_months}")
+    st.caption(f"Filtered records: {len(filtered_df)}")
+
     st.subheader("Filtered Results")
     if not filtered_df.empty:
-        st.dataframe(filtered_df[["Submission Date", "Tech", "Transfer Inventory from:", "Type of transfer", "Inventory to Transfer.", "ONT Type"]])
+        st.dataframe(filtered_df[["Submission Date", "Month", "Tech", "Transfer Inventory from:", "Type of transfer", "Inventory to Transfer.", "ONT Type"]])
     else:
-        st.warning("No results match your filters.")
+        st.warning("No records match the selected filters.")
 
     st.subheader("ONT Type Usage by Tech")
     if not filtered_df.empty:
