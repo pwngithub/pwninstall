@@ -10,10 +10,11 @@ uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 if not uploaded_file:
     st.stop()
 
-# Load and parse file
+# Load file without filtering anything
 df = pd.read_excel(uploaded_file)
+
+# Parse Submission Date but do NOT drop or filter any rows
 df["Submission Date"] = pd.to_datetime(df["Submission Date"], errors="coerce")
-df = df[df["Submission Date"].notna()].copy()
 df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
 
 # Diagnostic preview
@@ -29,13 +30,13 @@ def extract_ont_type(text):
 
 df["ONT Type"] = df["Inventory to Transfer."].apply(extract_ont_type)
 
-# Filter by Tech only
+# Allow optional filter by Tech only
 available_techs = sorted(df["Tech"].dropna().unique())
 selected_techs = st.multiselect("Filter by Tech", available_techs)
 
 filtered_df = df.copy()
 if selected_techs:
-    filtered_df = filtered_df[filtered_df["Tech"].isin(selected_techs)]
+    filtered_df = df[df["Tech"].isin(selected_techs)]
 
 # Debug info
 st.caption(f"Total records in file: {len(df)}")
