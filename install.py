@@ -10,30 +10,27 @@ uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 if not uploaded_file:
     st.stop()
 
-# Load and attempt to parse both date columns
 df = pd.read_excel(uploaded_file)
 
-# Try parsing Submission Date
+# Parse date columns
 df["Submission Date Parsed"] = pd.to_datetime(df["Submission Date"], errors="coerce")
 df["Today's Date Parsed"] = pd.to_datetime(df["Today's Date"], errors="coerce")
 
-# Fix missing Submission Dates using Today's Date
+# Fill missing Submission Dates with Today's Date
 missing_submission = df["Submission Date Parsed"].isna()
 df.loc[missing_submission, "Submission Date Parsed"] = df.loc[missing_submission, "Today's Date Parsed"]
 
-# Count how many were replaced
+# Show fix stats
 fixed_count = missing_submission.sum()
 total_rows = len(df)
-
-# Display info
 st.caption(f"Total records: {total_rows}")
 st.caption(f"Dates auto-fixed from 'Today's Date': {fixed_count}")
 
-# Use the repaired submission date
+# Standardize date fields
 df["Submission Date"] = df["Submission Date Parsed"]
 df["Month"] = df["Submission Date"].dt.to_period("M").astype(str)
 
-# Extract ONT type
+# Extract ONT Type
 def extract_ont_type(text):
     if isinstance(text, str):
         matches = re.findall(r'ONT\s+([0-9A-Za-z\s\(\)-]+)', text)
@@ -42,17 +39,37 @@ def extract_ont_type(text):
 
 df["ONT Type"] = df["Inventory to Transfer."].apply(extract_ont_type)
 
-# Filter by Tech
+# Filters
 available_techs = sorted(df["Tech"].dropna().unique())
+available_months = sorted(df["Month"].unique())
+
 selected_techs = st.multiselect("Filter by Tech", available_techs)
+selected_months = st.multiselect("Filter by Month", available_months)
 
 filtered_df = df.copy()
 if selected_techs:
     filtered_df = filtered_df[filtered_df["Tech"].isin(selected_techs)]
+if selected_months:
+    filtered_df = filtered_df[filtered_df["Month"].isin(selected_months)]
 
-# Results
+# Show results
 st.subheader("Filtered Results")
 st.dataframe(filtered_df[["Submission Date", "Month", "Tech", "Transfer Inventory from:", "Type of transfer", "Inventory to Transfer.", "ONT Type"]])
+
+# Technician Summary
+st.subheader("Technician Summary")
+if not filtered_df.empty:
+    summary_df = (
+        filtered_df.groupby("Tech")
+        .agg(
+            Installs=("ONT Type", "count"),
+            First_Install=("Submission Date", "min"),
+            Last_Install=("Submission Date", "max")
+        )
+        .sort_values(by="Installs", ascending=False)
+        .reset_index()
+    )
+    st.dataframe(summary_df)
 
 # Charts
 st.subheader("ONT Type Usage by Tech")
@@ -63,6 +80,7 @@ if not filtered_df.empty:
 st.subheader("Installs Per Day")
 installs_per_day = filtered_df.groupby(filtered_df["Submission Date"].dt.date).size()
 if not installs_per_day.empty:
+    import matplotlib.pyplot as plt
     fig_day, ax_day = plt.subplots()
     installs_per_day.plot(kind="bar", ax=ax_day)
     ax_day.set_title("Installs Per Day")
