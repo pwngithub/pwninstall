@@ -108,3 +108,18 @@ if not installs_per_month.empty:
     ax_month.set_ylabel("Number of Installs")
     ax_month.tick_params(axis='x', rotation=45)
     st.pyplot(fig_month)
+
+
+import os
+
+st.subheader("Previously Uploaded Files")
+
+# List all uploaded Excel files in the current directory
+uploaded_files = [f for f in os.listdir() if f.startswith("uploaded_") and f.endswith(".xlsx")]
+
+if uploaded_files:
+    selected_file = st.selectbox("Select a file to download", uploaded_files)
+    with open(selected_file, "rb") as f:
+        st.download_button("Download selected file", f, file_name=selected_file)
+else:
+    st.info("No uploaded files found.")
