@@ -6,7 +6,15 @@ import matplotlib.pyplot as plt
 
 st.title("Inventory Transfer Dashboard (Auto-Fix Dates)")
 
+
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
+if uploaded_file:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    save_path = f"uploaded_{timestamp}.xlsx"
+    with open(save_path, "wb") as out:
+        out.write(uploaded_file.getbuffer())
+    st.success(f"File saved as: {save_path}")
+
 if not uploaded_file:
     st.stop()
 
