@@ -11,7 +11,8 @@ st.title("Inventory Transfer Dashboard (Auto-Fix Dates)")
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 if uploaded_file:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    save_path = f"uploaded_{timestamp}.xlsx"
+    os.makedirs("uploads", exist_ok=True)
+    save_path = os.path.join("uploads", f"uploaded_{timestamp}.xlsx")
     with open(save_path, "wb") as out:
         out.write(uploaded_file.getbuffer())
     st.success(f"File saved as: {save_path}")
@@ -115,11 +116,11 @@ import os
 st.subheader("Previously Uploaded Files")
 
 # List all uploaded Excel files in the current directory
-uploaded_files = [f for f in os.listdir() if f.startswith("uploaded_") and f.endswith(".xlsx")]
+uploaded_files = [f for f in os.listdir("uploads") if f.endswith(".xlsx")]
 
 if uploaded_files:
     selected_file = st.selectbox("Select a file to download", uploaded_files)
-    with open(selected_file, "rb") as f:
+    with open(os.path.join("uploads", selected_file), "rb") as f:
         st.download_button("Download selected file", f, file_name=selected_file)
 else:
     st.info("No uploaded files found.")
